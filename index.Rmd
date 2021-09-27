@@ -21,6 +21,8 @@ library(ggplot2)
 knitr::opts_chunk$set(fig.width=9, fig.height=6)
 df <- read_csv2("actions-ministeres-fdr.csv") %>%
   set_standard_names()
+df[df$ministeres == "Ministère de la Transformation et la Fonction publiques", 
+   "ministeres"] <- "Ministère de la Transformation et de la Fonction publiques" 
 ```
 
 Chiffres clés {data-icon="fa-tachometer" data-orientation="rows"}
@@ -33,8 +35,7 @@ Row {data-height=100}
 
 Par une [circulaire du 27 avril 2021]((https://www.legifrance.gouv.fr/circulaire/id/45162)), qui s’appuie sur les préconisations du rapport du député Éric Bothorel qui lui avait été remis le 23 décembre dernier, le Premier ministre demande à l’ensemble des ministères de s'engager sur une feuille de route de sur l'ouverture, la circulation et l'exploitation des données, des algorithmes et des codes sources.
 
-Ce tableau permet de visualiser l'ensemble des engagements des ministères pris dans leurs feuilles de route.
-
+Ce tableau permet de visualiser l'ensemble des engagements des ministères pris dans leurs feuilles de route ([source](https://www.data.gouv.fr/fr/datasets/liste-des-actions-prises-par-les-ministeres-dans-le-cadre-des-feuilles-de-routes-ministerielles/)).
 
 Row {data-height=100}
 -------------------------------------
@@ -42,7 +43,7 @@ Row {data-height=100}
 ### Ministères
 
 ```{r}
-valueBox(length(unique(df$ministeres)), caption = "Nombre de ministères")
+valueBox(length(unique(df$ministeres)), caption = "Feuilles de route")
 ```
 
 ### Actions 
@@ -52,7 +53,7 @@ valueBox(nrow(df), caption = "Nombres d'actions")
 ```
 
 
-Row {data-height=300}
+Row {data-height=400}
 -------------------------------------
 
 ### Répartition par ministères
@@ -72,7 +73,7 @@ gg_ministeres <- df %>%
 ggplotly(gg_ministeres)
 ```
 
-Row {data-height=300} 
+Row {data-height=400} {.tabset}
 -------------------------------------
 
 ### Répartition par thématique
@@ -94,8 +95,6 @@ gg_thematiques <- df %>%
 ggplotly(gg_thematiques)
 ```
 
-Row {data-height=400} 
--------------------------------------
 
 ### Détail par thématique
 
@@ -105,11 +104,21 @@ df %>%
   filter(is.na(thematiques) == FALSE) %>%
   mutate(share = round(100 * n/sum(n))) %>%
   arrange(desc(n)) %>%
-  datatable()
+  datatable(
+    rownames = FALSE,
+    options = list(
+      pageLength = 10,
+      autoWidth = TRUE, 
+      language = list(url = 'lib/French.json')
+    )
+  )
 ```
 
-Détail {data-icon="fa-table" data-orientation="columns"}
+Détail {data-icon="fa-table" data-orientation="rows"}
 ==========================================
+
+Row {data-height=1000} 
+-------------------------------------
 
 ```{r}
 df %>% 
