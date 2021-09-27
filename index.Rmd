@@ -1,0 +1,135 @@
+---
+title: "Les feuilles de route data des ministères"
+output: 
+  flexdashboard::flex_dashboard:
+    vertical_layout: scroll
+    favicon: favicons/favicon.ico
+    orientation: rows
+---
+
+
+```{r setup, include=FALSE}
+# Voir https://davidgohel.github.io/ggiraph/index.html
+library(flexdashboard)
+library(DT)
+library(ggiraph)
+library(tidyverse)
+library(tricky)
+library(plotly)
+library("wesanderson")
+library(ggplot2)
+knitr::opts_chunk$set(fig.width=9, fig.height=6)
+df <- read_csv2("actions-ministeres-fdr.csv") %>%
+  set_standard_names()
+```
+
+Chiffres clés {data-icon="fa-tachometer" data-orientation="rows"}
+=====================================
+
+Row {data-height=100}
+-------------------------------------
+
+### Présentation
+
+Par une [circulaire du 27 avril 2021]((https://www.legifrance.gouv.fr/circulaire/id/45162)), qui s’appuie sur les préconisations du rapport du député Éric Bothorel qui lui avait été remis le 23 décembre dernier, le Premier ministre demande à l’ensemble des ministères de s'engager sur une feuille de route de sur l'ouverture, la circulation et l'exploitation des données, des algorithmes et des codes sources.
+
+Ce tableau permet de visualiser l'ensemble des engagements des ministères pris dans leurs feuilles de route.
+
+
+Row {data-height=100}
+-------------------------------------
+
+### Ministères
+
+```{r}
+valueBox(length(unique(df$ministeres)), caption = "Nombre de ministères")
+```
+
+### Actions 
+
+```{r}
+valueBox(nrow(df), caption = "Nombres d'actions")
+```
+
+
+Row {data-height=300}
+-------------------------------------
+
+### Répartition par ministères
+
+```{r}
+gg_ministeres <- df %>%
+  count(ministeres) %>%
+  mutate(
+    ministeres = fct_reorder(ministeres, n)
+    ) %>%
+  ggplot() + 
+  geom_bar(
+    aes(y = ministeres, x = n), 
+    stat = "identity", 
+    fill = "#4CA98D"
+    )
+ggplotly(gg_ministeres)
+```
+
+Row {data-height=300} 
+-------------------------------------
+
+### Répartition par thématique
+
+```{r}
+pal <- wes_palette("Zissou1", 15, type = "continuous")
+gg_thematiques <- df %>%
+  count(thematiques) %>%
+  filter(is.na(thematiques) == FALSE) %>%
+  mutate(
+    thematiques = fct_reorder(thematiques, n)
+  ) %>%
+  ggplot() + 
+  geom_bar(
+    aes(y = thematiques, x = n, fill = thematiques), 
+    stat = "identity", 
+  ) + 
+  scale_fill_manual(values = pal)
+ggplotly(gg_thematiques)
+```
+
+Row {data-height=400} 
+-------------------------------------
+
+### Détail par thématique
+
+```{r}
+df %>%
+  count(thematiques) %>%
+  filter(is.na(thematiques) == FALSE) %>%
+  mutate(share = round(100 * n/sum(n))) %>%
+  arrange(desc(n)) %>%
+  datatable()
+```
+
+Détail {data-icon="fa-table" data-orientation="columns"}
+==========================================
+
+```{r}
+df %>% 
+  mutate(
+    ministeres = as_factor(ministeres), 
+    thematiques = as_factor(thematiques), 
+    echeances = as_factor(echeances)
+    ) %>%
+  select(ministeres, thematiques, actions, echeances) %>%
+  datatable(
+    rownames = FALSE,
+    options = list(
+      pageLength = 10,
+      autoWidth = TRUE, 
+      language = list(url = 'lib/French.json')
+    ),
+    filter = 'top', 
+    extensions = 'Responsive',
+    class = 'cell-border stripe' ,
+    escape = FALSE
+    ) 
+```
+
